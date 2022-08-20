@@ -5,5 +5,6 @@ project(turtle_maniac)
 
 find_package(SFML COMPONENTS window graphics system network REQUIRED)
 
-add_executable(turtle_maniac src/turtle_maniac.cpp)
-target_link_libraries(turtle_maniac sfml-window sfml-graphics sfml-system sfml-network)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+
+add_subdirectory(src/client)
