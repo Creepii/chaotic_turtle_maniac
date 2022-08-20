@@ -8,3 +8,4 @@ find_package(SFML COMPONENTS window graphics system network REQUIRED)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 
 add_subdirectory(src/client)
+add_subdirectory(src/server)
