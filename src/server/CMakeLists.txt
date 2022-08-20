@@ -1,7 +1,7 @@
 find_package(SFML COMPONENTS network REQUIRED)
 
 set(SERVER_SOURCE_FILES
-    network/TurtleManiacServer.cpp
+    TurtleManiacServer.cpp
 )
 
 add_executable(turtle_maniac_server turtle_maniac_server.cpp ${SERVER_SOURCE_FILES})
