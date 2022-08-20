@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(turtle_maniac)
 
-find_package(SFML COMPONENTS window graphics system REQUIRED)
+find_package(SFML COMPONENTS window graphics system network REQUIRED)
 
 add_executable(turtle_maniac src/turtle_maniac.cpp)
-target_link_libraries(turtle_maniac sfml-window sfml-graphics sfml-system)
+target_link_libraries(turtle_maniac sfml-window sfml-graphics sfml-system sfml-network)
