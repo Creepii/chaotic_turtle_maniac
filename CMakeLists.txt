@@ -6,6 +6,8 @@ project(turtle_maniac)
 find_package(SFML COMPONENTS window graphics system network REQUIRED)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
+set(SRC_INCLUDE_FOLDER ${CMAKE_SOURCE_DIR}/src/)
 
+add_subdirectory(src/common)
 add_subdirectory(src/client)
 add_subdirectory(src/server)

@@ -2,21 +2,28 @@
 
 #include <stdexcept>
 #include <string>
+#include <thread>
+#include <functional>
 
 using namespace server;
 using namespace server::network;
 
-server::network::TurtleManiacServer::TurtleManiacServer(const unsigned short port) : is_running(false), port(port) {
+server::network::TurtleManiacServer::TurtleManiacServer(const unsigned short port)
+ : port(port), 
+   console(std::bind(&TurtleManiacServer::handle_input, this, std::placeholders::_1)),
+   is_running(false),
+   running_threads(0) {
 }
 
 void server::network::TurtleManiacServer::start() {
-    if(this->is_running.exchange(true))
+    if(this->running_threads > 0 || this->is_running.exchange(true))
         return;
 
     if(this->socket.listen(port) != sf::Socket::Done) {
         this->is_running = false;
         throw std::runtime_error("Unable to open port " + std::to_string(port) + "!");
     }
+    this->socket.setBlocking(false);
 
     std::thread packet_handler_thread(&TurtleManiacServer::packet_handler, this);
     std::thread connection_acceptor_thread(&TurtleManiacServer::connection_acceptor, this);
@@ -25,13 +32,24 @@ void server::network::TurtleManiacServer::start() {
     packet_handler_thread.detach();
     connection_acceptor_thread.detach();
     connection_listener_thread.detach();
+
+    this->console.log(common::Logger::INFO, "Server started. Listening on port " + std::to_string(this->port) + ".");
 }
 
-void server::network::TurtleManiacServer::shutdown() { //TODO: not completely thread-safe
+void server::network::TurtleManiacServer::shutdown() {
     if(!this->is_running.exchange(false))
         return;
 
+    this->console.log(common::Logger::INFO, "Server shutting down...");
+
     this->socket.close();
+
+    while(this->running_threads > 0); //wait for threads to shutdown
+
+}
+
+bool server::network::TurtleManiacServer::running() {
+    return this->running_threads > 0 || this->is_running;
 }
     
 server::network::TurtleManiacServer::~TurtleManiacServer() {
@@ -45,7 +63,16 @@ void server::network::TurtleManiacServer::handle_packet(sf::Packet& to_process) 
     //TODO
 }
 
+void server::network::TurtleManiacServer::handle_input(std::string input) {
+    if(input == "stop") {
+        this->shutdown();
+    }
+}
+
 void server::network::TurtleManiacServer::packet_handler() {
+    this->running_threads++;
+    this->console.log(common::Logger::INFO, "Packet handler started.");
+
     while(this->is_running) {
         std::queue<sf::Packet> to_process;
 
@@ -62,24 +89,45 @@ void server::network::TurtleManiacServer::packet_handler() {
             to_process.pop();
         }
     }
+
+    this->console.log(common::Logger::INFO, "Packet handler stopped.");
+    this->running_threads--;
 }
 
+//TODO stuck in accept on stop!
 void server::network::TurtleManiacServer::connection_acceptor() {
+    this->running_threads++;
+    this->console.log(common::Logger::INFO, "Connection acceptor started.");
+
     while(this->is_running) {
         std::unique_ptr<sf::TcpSocket> client = std::make_unique<sf::TcpSocket>();
 
-        if(this->socket.accept(*client.get()) != sf::Socket::Done) {
-            //TODO: Debugger log
-            continue;
-        }
-        client->setBlocking(false);
+        switch(this->socket.accept(*client.get())) {
+            case sf::Socket::Done:
+                {
+                    client->setBlocking(false);
 
-        std::lock_guard<std::mutex> client_connections_guard(this->client_connections_mutex);
-        this->client_connections.push_back(std::move(client));
+                    std::lock_guard<std::mutex> client_connections_guard(this->client_connections_mutex);
+                    this->client_connections.push_back(std::move(client));
+
+                    this->console.log(common::Logger::INFO, "Client connected with ip " + client->getRemoteAddress().toString());
+                }
+            case sf::Socket::NotReady:
+                continue;
+            default:
+                this->console.log(common::Logger::ERROR, "Client connection attempt failed!");
+                continue;
+        }
     }
+
+    this->console.log(common::Logger::INFO, "Connection acceptor stopped.");
+    this->running_threads--;
 }
 
 void server::network::TurtleManiacServer::connection_listener() {
+    this->running_threads++;
+    this->console.log(common::Logger::INFO, "Connection listener started.");
+
     while(this->is_running) {
         std::lock_guard<std::mutex> client_connections_guard(this->client_connections_mutex);
 
@@ -92,4 +140,7 @@ void server::network::TurtleManiacServer::connection_listener() {
             }
         }
     }
+
+    this->console.log(common::Logger::INFO, "Connection listener stopped.");
+    this->running_threads--;
 }
