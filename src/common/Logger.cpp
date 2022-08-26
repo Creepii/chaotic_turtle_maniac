@@ -23,7 +23,7 @@ common::Logger::Logger(input_handler_t input_handler) : input_handler(input_hand
     input_acceptor_thread.detach();
 }
 
-void common::Logger::log(const LogLevel level, const std::string& message) {
+void common::Logger::log(const LogLevel level, const std::string& message) const {
     std::lock_guard<std::mutex> print_lock(this->print_mutex);
 
     std::time_t current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
