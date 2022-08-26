@@ -26,7 +26,7 @@ namespace server {
                 std::mutex client_connections_mutex;
                 std::vector<std::unique_ptr<sf::TcpSocket>> client_connections;
 
-                common::Logger console;
+                common::Logger& console;
 
                 void handle_packet(sf::Packet& to_process);
                 void handle_input(std::string input);
@@ -35,7 +35,7 @@ namespace server {
                 void connection_acceptor();
                 void connection_listener();
             public:
-                TurtleManiacServer(const unsigned short port);
+                TurtleManiacServer(const unsigned short port, common::Logger& console);
                 void start();
                 void shutdown();
                 bool running();
