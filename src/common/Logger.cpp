@@ -33,6 +33,10 @@ void common::Logger::log(const LogLevel level, const std::string& message) {
     rl_forced_update_display();
 }
 
+void common::Logger::bind_input_handler(input_handler_t input_handler) {
+    this->input_handler = input_handler;
+}
+
 common::Logger::~Logger() {
     this->is_running = false;
 }

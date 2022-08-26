@@ -7,7 +7,6 @@
 namespace common {
     using input_handler_t = std::function<void (std::string)>;
 
-    //TODO: input handling doesnt work
     class Logger {
         private:
             input_handler_t input_handler;
@@ -26,6 +25,7 @@ namespace common {
 
             Logger(input_handler_t input_handler = {});
             void log(const LogLevel level, const std::string& message);
+            void bind_input_handler(input_handler_t input_handler);
             ~Logger();
     };
 }

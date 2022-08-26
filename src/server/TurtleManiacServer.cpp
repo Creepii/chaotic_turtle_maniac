@@ -8,11 +8,9 @@
 using namespace server;
 using namespace server::network;
 
-server::network::TurtleManiacServer::TurtleManiacServer(const unsigned short port)
- : port(port), 
-   console(std::bind(&TurtleManiacServer::handle_input, this, std::placeholders::_1)),
-   is_running(false),
-   running_threads(0) {
+server::network::TurtleManiacServer::TurtleManiacServer(const unsigned short port, common::Logger& console)
+ : port(port), console(console), is_running(false), running_threads(0) { 
+   this->console.bind_input_handler(std::bind(&TurtleManiacServer::handle_input, this, std::placeholders::_1));
 }
 
 void server::network::TurtleManiacServer::start() {
@@ -66,6 +64,8 @@ void server::network::TurtleManiacServer::handle_packet(sf::Packet& to_process) 
 void server::network::TurtleManiacServer::handle_input(std::string input) {
     if(input == "stop") {
         this->shutdown();
+    } else {
+        this->console.log(common::Logger::ERROR, "Unknown command!");
     }
 }
 
@@ -94,7 +94,6 @@ void server::network::TurtleManiacServer::packet_handler() {
     this->running_threads--;
 }
 
-//TODO stuck in accept on stop!
 void server::network::TurtleManiacServer::connection_acceptor() {
     this->running_threads++;
     this->console.log(common::Logger::INFO, "Connection acceptor started.");

@@ -3,7 +3,8 @@
 #include "TurtleManiacServer.h"
 
 int main() {
-    server::network::TurtleManiacServer turtle_server(50141);
+    common::Logger console{};
+    server::network::TurtleManiacServer turtle_server(50141, console);
 
     turtle_server.start();
 
