@@ -7,7 +7,7 @@
 
 #include <SFML/Network.hpp>
 
-#include "common/Logger.h"
+#include "common/Console.h"
 
 namespace server {
     namespace network {
@@ -26,16 +26,15 @@ namespace server {
                 std::mutex client_connections_mutex;
                 std::vector<std::unique_ptr<sf::TcpSocket>> client_connections;
 
-                common::Logger& console;
+                const common::Console& console;
 
                 void handle_packet(sf::Packet& to_process);
-                void handle_input(std::string input);
 
                 void packet_handler();
                 void connection_acceptor();
                 void connection_listener();
             public:
-                TurtleManiacServer(const unsigned short port, common::Logger& console);
+                TurtleManiacServer(const unsigned short port, const common::Console& console);
                 void start();
                 void shutdown();
                 bool running();

@@ -8,9 +8,8 @@
 using namespace server;
 using namespace server::network;
 
-server::network::TurtleManiacServer::TurtleManiacServer(const unsigned short port, common::Logger& console)
+server::network::TurtleManiacServer::TurtleManiacServer(const unsigned short port, const common::Console& console)
  : port(port), console(console), is_running(false), running_threads(0) { 
-   this->console.bind_input_handler(std::bind(&TurtleManiacServer::handle_input, this, std::placeholders::_1));
 }
 
 void server::network::TurtleManiacServer::start() {
@@ -31,14 +30,14 @@ void server::network::TurtleManiacServer::start() {
     connection_acceptor_thread.detach();
     connection_listener_thread.detach();
 
-    this->console.log(common::Logger::INFO, "Server started. Listening on port " + std::to_string(this->port) + ".");
+    this->console.log(common::Console::INFO, "Server started. Listening on port " + std::to_string(this->port) + ".");
 }
 
 void server::network::TurtleManiacServer::shutdown() {
     if(!this->is_running.exchange(false))
         return;
 
-    this->console.log(common::Logger::INFO, "Server shutting down...");
+    this->console.log(common::Console::INFO, "Server shutting down...");
 
     this->socket.close();
 
@@ -61,17 +60,9 @@ void server::network::TurtleManiacServer::handle_packet(sf::Packet& to_process) 
     //TODO
 }
 
-void server::network::TurtleManiacServer::handle_input(std::string input) {
-    if(input == "stop") {
-        this->shutdown();
-    } else {
-        this->console.log(common::Logger::ERROR, "Unknown command!");
-    }
-}
-
 void server::network::TurtleManiacServer::packet_handler() {
     this->running_threads++;
-    this->console.log(common::Logger::INFO, "Packet handler started.");
+    this->console.log(common::Console::INFO, "Packet handler started.");
 
     while(this->is_running) {
         std::queue<sf::Packet> to_process;
@@ -90,13 +81,13 @@ void server::network::TurtleManiacServer::packet_handler() {
         }
     }
 
-    this->console.log(common::Logger::INFO, "Packet handler stopped.");
+    this->console.log(common::Console::INFO, "Packet handler stopped.");
     this->running_threads--;
 }
 
 void server::network::TurtleManiacServer::connection_acceptor() {
     this->running_threads++;
-    this->console.log(common::Logger::INFO, "Connection acceptor started.");
+    this->console.log(common::Console::INFO, "Connection acceptor started.");
 
     while(this->is_running) {
         std::unique_ptr<sf::TcpSocket> client = std::make_unique<sf::TcpSocket>();
@@ -109,23 +100,23 @@ void server::network::TurtleManiacServer::connection_acceptor() {
                     std::lock_guard<std::mutex> client_connections_guard(this->client_connections_mutex);
                     this->client_connections.push_back(std::move(client));
 
-                    this->console.log(common::Logger::INFO, "Client connected with ip " + client->getRemoteAddress().toString());
+                    this->console.log(common::Console::INFO, "Client connected with ip " + client->getRemoteAddress().toString());
                 }
             case sf::Socket::NotReady:
                 continue;
             default:
-                this->console.log(common::Logger::ERROR, "Client connection attempt failed!");
+                this->console.log(common::Console::ERROR, "Client connection attempt failed!");
                 continue;
         }
     }
 
-    this->console.log(common::Logger::INFO, "Connection acceptor stopped.");
+    this->console.log(common::Console::INFO, "Connection acceptor stopped.");
     this->running_threads--;
 }
 
 void server::network::TurtleManiacServer::connection_listener() {
     this->running_threads++;
-    this->console.log(common::Logger::INFO, "Connection listener started.");
+    this->console.log(common::Console::INFO, "Connection listener started.");
 
     while(this->is_running) {
         std::lock_guard<std::mutex> client_connections_guard(this->client_connections_mutex);
@@ -140,6 +131,6 @@ void server::network::TurtleManiacServer::connection_listener() {
         }
     }
 
-    this->console.log(common::Logger::INFO, "Connection listener stopped.");
+    this->console.log(common::Console::INFO, "Connection listener stopped.");
     this->running_threads--;
 }

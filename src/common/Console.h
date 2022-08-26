@@ -7,7 +7,7 @@
 namespace common {
     using input_handler_t = std::function<void (std::string)>;
 
-    class Logger {
+    class Console {
         private:
             input_handler_t input_handler;
             bool is_running;
@@ -23,9 +23,9 @@ namespace common {
                 WARNING
             };
 
-            Logger(input_handler_t input_handler = {});
+            Console(input_handler_t input_handler = {});
             void log(const LogLevel level, const std::string& message) const;
             void bind_input_handler(input_handler_t input_handler);
-            ~Logger();
+            ~Console();
     };
 }
