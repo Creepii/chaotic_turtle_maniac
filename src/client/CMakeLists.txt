@@ -2,7 +2,8 @@ find_package(SFML COMPONENTS window graphics system REQUIRED)
 
 set(CLIENT_SOURCE_FILES
     TextureManager.cpp
-    ClientSocket.cpp
+    
+    network/ClientSocket.cpp
 )
 
 add_executable(tm_client tm_client.cpp ${CLIENT_SOURCE_FILES})
