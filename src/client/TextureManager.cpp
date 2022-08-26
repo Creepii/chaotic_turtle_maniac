@@ -13,6 +13,7 @@ void TextureManager::load_textures() {
     this->load_texture("turtle_opening", "../res/turtle_hatch_opening.png");
     this->load_texture("turtle_open", "../res/turtle_hatch_open.png");
     this->load_texture("turtle_shooting", "../res/turtle_hatch_shooting.png");
+    this->load_texture("logo", "../res/logo.png");
 }
 
 void TextureManager::load_texture(std::string name, std::string filename) {

@@ -12,6 +12,7 @@ int main() {
     sf::RenderWindow window(sf::VideoMode(500, 500), "Project setup");
     TextureManager texture_manager;
     texture_manager.load_textures();
+    window.setIcon(texture_manager.get_texture("logo").getSize().x, texture_manager.get_texture("logo").getSize().y, texture_manager.get_texture("logo").copyToImage().getPixelsPtr());
     sf::Sprite sprite;
     sprite.setTexture(texture_manager.get_texture("holy_salad"));
     sprite.scale(sf::Vector2f(8.0, 8.0));
