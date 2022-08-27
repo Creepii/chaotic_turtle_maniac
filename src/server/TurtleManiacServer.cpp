@@ -16,6 +16,7 @@ void server::network::TurtleManiacServer::start() {
     if(this->running_threads > 0 || this->is_running.exchange(true))
         return;
 
+    this->socket.setBlocking(true);
     if(this->socket.listen(port) != sf::Socket::Done) {
         this->is_running = false;
         throw std::runtime_error("Unable to open port " + std::to_string(port) + "!");
@@ -91,16 +92,15 @@ void server::network::TurtleManiacServer::connection_acceptor() {
 
     while(this->is_running) {
         std::unique_ptr<sf::TcpSocket> client = std::make_unique<sf::TcpSocket>();
-
+        
         switch(this->socket.accept(*client.get())) {
             case sf::Socket::Done:
                 {
                     client->setBlocking(false);
+                    this->console.log(common::Console::INFO, "Client connected with ip " + client->getRemoteAddress().toString());
 
                     std::lock_guard<std::mutex> client_connections_guard(this->client_connections_mutex);
                     this->client_connections.push_back(std::move(client));
-
-                    this->console.log(common::Console::INFO, "Client connected with ip " + client->getRemoteAddress().toString());
                 }
             case sf::Socket::NotReady:
                 continue;
