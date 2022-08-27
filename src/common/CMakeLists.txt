@@ -1,5 +1,5 @@
 set(COMMON_SOURCE_FILES
-    Logger.cpp
+    Console.cpp
 )
 
 add_library(common ${COMMON_SOURCE_FILES})

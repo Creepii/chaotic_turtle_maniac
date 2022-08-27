@@ -1,4 +1,4 @@
-#include "Logger.h"
+#include "Console.h"
 
 #include <thread>
 #include <iostream>
@@ -16,14 +16,14 @@ const std::string LOG_LEVEL_TO_STRING[] = {
     "WARN "
 };
 
-common::Logger::Logger(input_handler_t input_handler) : input_handler(input_handler), is_running(true) {
+common::Console::Console(input_handler_t input_handler) : input_handler(input_handler), is_running(true) {
     rl_bind_key('\t', rl_tab_insert);
 
-    std::thread input_acceptor_thread(&Logger::input_acceptor, this);
+    std::thread input_acceptor_thread(&Console::input_acceptor, this);
     input_acceptor_thread.detach();
 }
 
-void common::Logger::log(const LogLevel level, const std::string& message) const {
+void common::Console::log(const LogLevel level, const std::string& message) const {
     std::lock_guard<std::mutex> print_lock(this->print_mutex);
 
     std::time_t current_time = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -33,18 +33,18 @@ void common::Logger::log(const LogLevel level, const std::string& message) const
     rl_forced_update_display();
 }
 
-void common::Logger::bind_input_handler(input_handler_t input_handler) {
+void common::Console::bind_input_handler(input_handler_t input_handler) {
     this->input_handler = input_handler;
 }
 
-common::Logger::~Logger() {
+common::Console::~Console() {
     this->is_running = false;
 }
 
 
 
 //private
-void common::Logger::input_acceptor() {
+void common::Console::input_acceptor() {
     char* buffer = nullptr;
     while(this->is_running) {
         buffer = readline(">> ");

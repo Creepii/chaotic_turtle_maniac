@@ -1,4 +1,7 @@
 #include <SFML/Graphics.hpp>
+
+#include "network/ClientSocket.h"
+
 #include "TextureManager.h"
 #include "Animation.h"
 
@@ -10,6 +13,11 @@ double calc_scale(const sf::RenderWindow& window, const sf::Texture* texture, do
 }
 
 int main() {
+    common::Console console{};
+    client::network::ClientSocket socket("127.0.0.1", 50141, console);
+
+    socket.connect();
+
     sf::RenderWindow window(sf::VideoMode(500, 500), "Project setup");
     window.setFramerateLimit(60);
     // TextureManager texture_manager;
@@ -47,6 +55,8 @@ int main() {
 
         window.display();
     }
+
+    socket.disconnect();
 
     return 0;
 }
