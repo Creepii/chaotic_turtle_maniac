@@ -22,14 +22,14 @@ namespace server {
                 sf::TcpListener socket;
 
                 std::mutex packet_queue_mutex;
-                std::queue<sf::Packet> packet_queue;
+                std::queue<std::pair<sf::Packet, sf::IpAddress>> packet_queue;
 
                 std::mutex client_connections_mutex;
                 std::vector<std::unique_ptr<sf::TcpSocket>> client_connections;
 
                 const common::Console& console;
 
-                void handle_packet(sf::Packet& to_process);
+                void handle_packet(sf::Packet& to_process, const sf::IpAddress& sender);
 
                 void packet_handler();
                 void connection_acceptor();
