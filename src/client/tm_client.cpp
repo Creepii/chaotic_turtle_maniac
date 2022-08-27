@@ -17,6 +17,10 @@ int main() {
     client::network::ClientSocket socket("127.0.0.1", 50141, console);
 
     socket.connect();
+    
+    sf::Packet message;
+    message << "Hello from client. Here, take a 'random' number: 7";
+    socket.send_packet(message);
 
     sf::RenderWindow window(sf::VideoMode(500, 500), "Crazy Turtle Maniac");
     window.setFramerateLimit(60);

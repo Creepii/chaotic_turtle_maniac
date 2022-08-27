@@ -57,8 +57,13 @@ server::network::TurtleManiacServer::~TurtleManiacServer() {
 
 
 //private
-void server::network::TurtleManiacServer::handle_packet(sf::Packet& to_process) {
-    //TODO
+void server::network::TurtleManiacServer::handle_packet(sf::Packet& to_process, const sf::IpAddress& sender) {
+    //TODO: placeholder code
+    std::string message;
+    to_process >> message;
+
+    this->console.log(common::Console::INFO, "Message from " + sender.toString() + ": " + message);
+
 }
 
 void server::network::TurtleManiacServer::packet_handler() {
@@ -66,7 +71,7 @@ void server::network::TurtleManiacServer::packet_handler() {
     this->console.log(common::Console::INFO, "Packet handler started.");
 
     while(this->is_running) {
-        std::queue<sf::Packet> to_process;
+        std::queue<std::pair<sf::Packet, sf::IpAddress>> to_process;
 
         {
             std::lock_guard<std::mutex> packet_queue_lock(this->packet_queue_mutex);
@@ -77,7 +82,7 @@ void server::network::TurtleManiacServer::packet_handler() {
         }
 
         while(!to_process.empty()) {
-            this->handle_packet(to_process.front());
+            this->handle_packet(to_process.front().first, to_process.front().second);
             to_process.pop();
         }
     }
@@ -119,18 +124,44 @@ void server::network::TurtleManiacServer::connection_listener() {
     this->console.log(common::Console::INFO, "Connection listener started.");
 
     while(this->is_running) {
-        std::lock_guard<std::mutex> client_connections_guard(this->client_connections_mutex);
+        std::vector<size_t> disconnected_clients;
+        
+        {
+            std::lock_guard<std::mutex> client_connections_guard(this->client_connections_mutex);
 
-        for(std::unique_ptr<sf::TcpSocket>& client : this->client_connections) {
-            sf::Packet received_packet;
+            for(size_t i = 0; i < this->client_connections.size(); i++) {
+                std::unique_ptr<sf::TcpSocket>& client = this->client_connections[i];
+                sf::Packet received_packet;
 
-            if(client->receive(received_packet) == sf::Socket::Done) {
-                std::lock_guard<std::mutex> packet_queue_lock(this->packet_queue_mutex);
-                this->packet_queue.push(received_packet);
+                switch(client->receive(received_packet)) {
+                    case sf::Socket::Done:
+                        {
+                            std::lock_guard<std::mutex> packet_queue_lock(this->packet_queue_mutex);
+                            this->packet_queue.push(std::make_pair(received_packet, client->getRemoteAddress()));
+                        }
+                        break;
+                    case sf::Socket::Disconnected:
+                    case sf::Socket::Error:
+                        disconnected_clients.push_back(i);
+                        break;
+                    default:
+                        break;
+                }
             }
         }
+
+        if(!disconnected_clients.empty()) this->cleanup_connections(disconnected_clients);
     }
 
     this->console.log(common::Console::INFO, "Connection listener stopped.");
     this->running_threads--;
+}
+
+void server::network::TurtleManiacServer::cleanup_connections(const std::vector<size_t>& to_remove) {
+    std::lock_guard<std::mutex> client_connections_guard(this->client_connections_mutex);
+    
+    for(auto iter = to_remove.rbegin(); iter != to_remove.rend(); iter++) {
+        this->console.log(common::Console::INFO, "Client with ip " + this->client_connections[*iter]->getRemoteAddress().toString() + " disconnected.");
+        this->client_connections.erase(this->client_connections.begin() + *iter);
+    }
 }
