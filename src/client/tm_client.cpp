@@ -42,8 +42,9 @@ int main() {
 
         double turtle_scale = calc_scale(window, turtle.getTexture(), 16);
 
-        float move_dist = window.getSize().x > window.getSize().y ? window.getSize().x / 100.0 : window.getSize().y / 100.0;
-        
+        //float move_dist = window.getSize().x > window.getSize().y ? window.getSize().x / 100.0 : window.getSize().y / 100.0;
+        float move_dist = 5.0;
+
         sf::Vector2f pos_off = sf::Vector2f(0, 0);
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
@@ -61,7 +62,7 @@ int main() {
 
         if(pos_off != sf::Vector2f(0, 0)) {
             sf::Packet position_change_packet;
-            position_change_packet << pos_off.x << pos_off.x;
+            position_change_packet << pos_off.x << pos_off.y;
             socket.send_packet(position_change_packet);
         }
 
