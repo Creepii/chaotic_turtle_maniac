@@ -4,6 +4,7 @@
 #include <queue>
 #include <atomic>
 #include <memory>
+#include <vector>
 
 #include <SFML/Network.hpp>
 
@@ -33,6 +34,8 @@ namespace server {
                 void packet_handler();
                 void connection_acceptor();
                 void connection_listener();
+
+                void cleanup_connections(const std::vector<size_t>& to_remove);
             public:
                 TurtleManiacServer(const unsigned short port, const common::Console& console);
                 void start();
