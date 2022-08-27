@@ -58,12 +58,13 @@ server::network::TurtleManiacServer::~TurtleManiacServer() {
 
 //private
 void server::network::TurtleManiacServer::handle_packet(sf::Packet& to_process, const sf::IpAddress& sender) {
-    //TODO: placeholder code
-    std::string message;
-    to_process >> message;
+    std::lock_guard<std::mutex> client_connections_lock(this->client_connections_mutex);
 
-    this->console.log(common::Console::INFO, "Message from " + sender.toString() + ": " + message);
-
+    for(std::unique_ptr<sf::TcpSocket>& client : this->client_connections) {
+        if(client->getRemoteAddress() == sender) continue;
+        
+        while(client->send(to_process) == sf::Socket::Partial); // to ensure that the packet is not corrupted
+    }
 }
 
 void server::network::TurtleManiacServer::packet_handler() {

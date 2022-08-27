@@ -17,10 +17,6 @@ int main() {
     client::network::ClientSocket socket("127.0.0.1", 50141, console);
 
     socket.connect();
-    
-    sf::Packet message;
-    message << "Hello from client. Here, take a 'random' number: 7";
-    socket.send_packet(message);
 
     sf::RenderWindow window(sf::VideoMode(500, 500), "Crazy Turtle Maniac");
     window.setFramerateLimit(60);
@@ -47,13 +43,31 @@ int main() {
         double turtle_scale = calc_scale(window, turtle.getTexture(), 16);
 
         float move_dist = window.getSize().x > window.getSize().y ? window.getSize().x / 100.0 : window.getSize().y / 100.0;
-        sf::Vector2f new_pos = turtle.getPosition();
+        sf::Vector2f pos_off = sf::Vector2f(0, 0);
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-            new_pos -= sf::Vector2f(0.0 , move_dist);
+            pos_off -= sf::Vector2f(0.0 , move_dist);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-            new_pos += sf::Vector2f(0.0 , move_dist);
+            pos_off += sf::Vector2f(0.0 , move_dist);
         }
+
+        if(pos_off != sf::Vector2f(0, 0)) {
+            sf::Packet position_change_packet;
+            position_change_packet << pos_off.y << pos_off.x;
+            socket.send_packet(position_change_packet);
+        }
+
+        std::queue<sf::Packet> received = socket.get_available_packets();
+
+        while(!received.empty()) {
+            float off_x, off_y;
+            received.front() >> off_x >> off_y;
+            received.pop();
+
+            pos_off += sf::Vector2f(off_x, off_y);
+        }
+
+        sf::Vector2f new_pos = turtle.getPosition() + pos_off;
         if (new_pos.y >= 0 && new_pos.y <= (window.getSize().y - turtle.getTexture()->getSize().y * turtle_scale)) {
             turtle.setPosition(new_pos);
         }
