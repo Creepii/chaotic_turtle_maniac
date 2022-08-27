@@ -1,4 +1,7 @@
 #include <SFML/Graphics.hpp>
+
+#include "network/ClientSocket.h"
+
 #include "TextureManager.h"
 
 // fraction: 10 = 10th of screen, 5 = 5th of screen
@@ -9,6 +12,11 @@ double calc_scale(const sf::RenderWindow& window, const sf::Texture* texture, do
 }
 
 int main() {
+    common::Console console{};
+    client::network::ClientSocket socket("127.0.0.1", 50141, console);
+
+    socket.connect();
+
     sf::RenderWindow window(sf::VideoMode(500, 500), "Project setup");
     TextureManager texture_manager;
     texture_manager.load_textures();
@@ -37,6 +45,8 @@ int main() {
 
         window.display();
     }
+
+    socket.disconnect();
 
     return 0;
 }
