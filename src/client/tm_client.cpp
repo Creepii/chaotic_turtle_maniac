@@ -43,17 +43,25 @@ int main() {
         double turtle_scale = calc_scale(window, turtle.getTexture(), 16);
 
         float move_dist = window.getSize().x > window.getSize().y ? window.getSize().x / 100.0 : window.getSize().y / 100.0;
+        
         sf::Vector2f pos_off = sf::Vector2f(0, 0);
+
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
             pos_off -= sf::Vector2f(0.0 , move_dist);
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
             pos_off += sf::Vector2f(0.0 , move_dist);
         }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+            pos_off -= sf::Vector2f(move_dist , 0.0);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+            pos_off += sf::Vector2f(move_dist , 0.0);
+        }
 
         if(pos_off != sf::Vector2f(0, 0)) {
             sf::Packet position_change_packet;
-            position_change_packet << pos_off.y << pos_off.x;
+            position_change_packet << pos_off.x << pos_off.x;
             socket.send_packet(position_change_packet);
         }
 
@@ -68,20 +76,7 @@ int main() {
         }
 
         sf::Vector2f new_pos = turtle.getPosition() + pos_off;
-        if (new_pos.y >= 0 && new_pos.y <= (window.getSize().y - turtle.getTexture()->getSize().y * turtle_scale)) {
-            turtle.setPosition(new_pos);
-        }
-
-        new_pos = turtle.getPosition();
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-            new_pos -= sf::Vector2f(move_dist , 0.0);
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-            new_pos += sf::Vector2f(move_dist , 0.0);
-        }
-        if (new_pos.x >= 0 && new_pos.x <= (window.getSize().x - turtle.getTexture()->getSize().x * turtle_scale)) {
-            turtle.setPosition(new_pos);
-        }
+        turtle.setPosition(new_pos);
 
         window.clear();
 
