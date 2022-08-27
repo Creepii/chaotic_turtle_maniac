@@ -5,6 +5,10 @@
 #include <string>
 #include <iostream>
 
+class TextureManager;
+
+extern TextureManager texture_manager;
+
 class TextureManager {
     private:
         std::map<std::string, sf::Texture> texture_map;

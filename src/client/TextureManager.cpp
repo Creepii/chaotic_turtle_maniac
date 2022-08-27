@@ -1,9 +1,12 @@
 #include "TextureManager.h"
 
+TextureManager texture_manager{};
+
 TextureManager::TextureManager() {
     if (!this->missing.create(1, 1)) {
         std::cout << "Severe error" << std::endl;
     }
+    this->load_textures();
 }
 
 void TextureManager::load_textures() {

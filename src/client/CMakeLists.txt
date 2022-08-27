@@ -2,6 +2,7 @@ find_package(SFML COMPONENTS window graphics system REQUIRED)
 
 set(CLIENT_SOURCE_FILES
     TextureManager.cpp
+    Animation.cpp
     
     network/ClientSocket.cpp
 )
