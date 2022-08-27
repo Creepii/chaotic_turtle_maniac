@@ -18,14 +18,11 @@ int main() {
 
     socket.connect();
 
-    sf::RenderWindow window(sf::VideoMode(500, 500), "Project setup");
+    sf::RenderWindow window(sf::VideoMode(500, 500), "Crazy Turtle Maniac");
     window.setFramerateLimit(60);
-    // TextureManager texture_manager;
-    // texture_manager.load_textures();
     window.setIcon(texture_manager.get_texture("logo").getSize().x, texture_manager.get_texture("logo").getSize().y, texture_manager.get_texture("logo").copyToImage().getPixelsPtr());
     sf::Sprite sprite;
     sprite.setTexture(texture_manager.get_texture("holy_salad"));
-    sprite.scale(sf::Vector2f(8.0, 8.0));
 
     std::vector<std::string> tex = {"turtle", "turtle_opening", "turtle_open", "turtle_shooting", "turtle_open", "turtle_opening"};
     std::vector<int> time = {1000, 300, 300, 100, 300, 300};
@@ -43,6 +40,31 @@ int main() {
             }
         }
 
+        double turtle_scale = calc_scale(window, turtle.getTexture(), 16);
+
+        float move_dist = window.getSize().x > window.getSize().y ? window.getSize().x / 100.0 : window.getSize().y / 100.0;
+        sf::Vector2f new_pos = turtle.getPosition();
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+            new_pos -= sf::Vector2f(0.0 , move_dist);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+            new_pos += sf::Vector2f(0.0 , move_dist);
+        }
+        if (new_pos.y >= 0 && new_pos.y <= (window.getSize().y - turtle.getTexture()->getSize().y * turtle_scale)) {
+            turtle.setPosition(new_pos);
+        }
+
+        new_pos = turtle.getPosition();
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
+            new_pos -= sf::Vector2f(move_dist , 0.0);
+        }
+        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
+            new_pos += sf::Vector2f(move_dist , 0.0);
+        }
+        if (new_pos.x >= 0 && new_pos.x <= (window.getSize().x - turtle.getTexture()->getSize().x * turtle_scale)) {
+            turtle.setPosition(new_pos);
+        }
+
         window.clear();
 
         window.draw(sprite);
@@ -50,6 +72,7 @@ int main() {
         sprite.setScale(scale, scale);
         sprite.setPosition(window.getSize().x / 2 - sprite.getTexture()->getSize().x * scale / 2, window.getSize().y / 2 - sprite.getTexture()->getSize().y * scale / 2);
 
+        turtle.setScale(turtle_scale, turtle_scale);
         window.draw(turtle);
         turtle.tick();
 
