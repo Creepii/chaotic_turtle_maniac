@@ -3,20 +3,22 @@
 #include <SFML/Graphics.hpp>
 #include <map>
 #include <string>
-#include <iostream>
 
-class TextureManager;
+#include "common/Console.h"
 
-extern TextureManager texture_manager;
+namespace client {
+    class TextureManager {
+        private:
+            const common::Console& console;
+            std::map<std::string, sf::Texture> texture_map;
 
-class TextureManager {
-    private:
-        std::map<std::string, sf::Texture> texture_map;
-        sf::Texture missing;
+            bool has_texture(const std::string& name) const;
 
-        void load_texture(std::string name, std::string filename);
-    public:
-        TextureManager();
-        void load_textures();
-        const sf::Texture& get_texture(std::string name);
-};
+            static const sf::Texture& get_missing_texture();
+        public:
+            TextureManager(const common::Console& console);
+            void load_texture(const std::string& name, const std::string& filename);
+            void load_directory(const std::string& directory);
+            const sf::Texture& get_texture(const std::string& name) const;
+    };
+}

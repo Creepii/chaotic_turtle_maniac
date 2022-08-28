@@ -20,15 +20,25 @@ int main() {
 
     socket.connect();
 
+    client::TextureManager texture_manager(console);
+    texture_manager.load_directory(RESOURCE_FOLDER);
+
     sf::RenderWindow window(sf::VideoMode(500, 500), "Chaotic Turtle Maniac", sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(60);
     window.setIcon(texture_manager.get_texture("logo").getSize().x, texture_manager.get_texture("logo").getSize().y, texture_manager.get_texture("logo").copyToImage().getPixelsPtr());
     sf::Sprite sprite;
     sprite.setTexture(texture_manager.get_texture("holy_salad"));
 
-    std::vector<std::string> tex = {"turtle", "turtle_opening", "turtle_open", "turtle_shooting", "turtle_open", "turtle_opening"};
+    sf::Sprite background;
+    background.setTexture(texture_manager.get_texture("background"));
+    background.setScale(
+        (float)window.getSize().x / background.getTexture()->getSize().x,
+        (float)window.getSize().y / background.getTexture()->getSize().y
+    );
+
+    const std::vector<std::string> tex = {"turtle", "turtle_opening", "turtle_open", "turtle_shooting", "turtle_open", "turtle_opening"};
     std::vector<int> time = {1000, 300, 300, 100, 300, 300};
-    Animation turtle{tex, time};
+    client::Animation turtle{tex, time, texture_manager};
     turtle.set_repeating(true);
 
     std::vector<sf::Vector2f> powerup_locations;
@@ -98,6 +108,7 @@ int main() {
 
         window.clear();
 
+        window.draw(background);
         window.draw(sprite);
         sprite.setPosition(window.getSize().x / 2 - sprite.getTexture()->getSize().x / 2, window.getSize().y / 2 - sprite.getTexture()->getSize().y / 2);
 
