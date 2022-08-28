@@ -1,15 +1,17 @@
 #include <SFML/Graphics.hpp>
+#include <random>
 
 #include "network/ClientSocket.h"
 
 #include "TextureManager.h"
 #include "Animation.h"
 
-// fraction: 10 = 10th of screen, 5 = 5th of screen
-double calc_scale(const sf::RenderWindow& window, const sf::Texture* texture, double fraction) {
-    int win_size = window.getSize().x > window.getSize().y ? window.getSize().x : window.getSize().y;
-    double sprite_size = win_size / fraction;
-    return sprite_size / texture->getSize().x;
+// inclusive min and max
+int get_random_int(int min, int max) {
+    std::random_device r;
+    std::default_random_engine e1(r());
+    std::uniform_int_distribution<int> uniform_dist(min, max);
+    return uniform_dist(e1);
 }
 
 int main() {
@@ -18,7 +20,7 @@ int main() {
 
     socket.connect();
 
-    sf::RenderWindow window(sf::VideoMode(500, 500), "Crazy Turtle Maniac");
+    sf::RenderWindow window(sf::VideoMode(500, 500), "Chaotic Turtle Maniac", sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(60);
     window.setIcon(texture_manager.get_texture("logo").getSize().x, texture_manager.get_texture("logo").getSize().y, texture_manager.get_texture("logo").copyToImage().getPixelsPtr());
     sf::Sprite sprite;
@@ -28,6 +30,11 @@ int main() {
     std::vector<int> time = {1000, 300, 300, 100, 300, 300};
     Animation turtle{tex, time};
     turtle.set_repeating(true);
+
+    std::vector<sf::Vector2f> powerup_locations;
+    sf::Sprite powerup;
+    powerup.setTexture(texture_manager.get_texture("powerup"));
+    double speed_boost = 1.0;
 
     while (window.isOpen()) {
         sf::Event event;
@@ -40,29 +47,32 @@ int main() {
             }
         }
 
-        double turtle_scale = calc_scale(window, turtle.getTexture(), 16);
-
-        //float move_dist = window.getSize().x > window.getSize().y ? window.getSize().x / 100.0 : window.getSize().y / 100.0;
-        float move_dist = 5.0;
-
-        sf::Vector2f pos_off = sf::Vector2f(0, 0);
+        float move_dist = 2.0 * speed_boost;
+        float pos_off_x = 0.0;
+        float pos_off_y = 0.0;
 
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-            pos_off -= sf::Vector2f(0.0 , move_dist);
+            pos_off_y -= move_dist;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-            pos_off += sf::Vector2f(0.0 , move_dist);
+            pos_off_y += move_dist;
+        }
+        if (!(turtle.getPosition().y + pos_off_y >= 0 && turtle.getPosition().y + pos_off_y + turtle.getTexture()->getSize().y <= window.getSize().y)) {
+            pos_off_y = 0.0; // cancel if y movement is out of window
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-            pos_off -= sf::Vector2f(move_dist , 0.0);
+            pos_off_x -= move_dist;
         }
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-            pos_off += sf::Vector2f(move_dist , 0.0);
+            pos_off_x += move_dist;
+        }
+        if (!(turtle.getPosition().x + pos_off_x >= 0 && turtle.getPosition().x + pos_off_x + turtle.getTexture()->getSize().x <= window.getSize().x)) {
+            pos_off_x = 0.0; // cancel if x movement is out of window
         }
 
-        if(pos_off != sf::Vector2f(0, 0)) {
+        if(pos_off_x != 0.0 || pos_off_y != 0) {
             sf::Packet position_change_packet;
-            position_change_packet << pos_off.x << pos_off.y;
+            position_change_packet << pos_off_x << pos_off_y;
             socket.send_packet(position_change_packet);
         }
 
@@ -73,20 +83,37 @@ int main() {
             received.front() >> off_x >> off_y;
             received.pop();
 
-            pos_off += sf::Vector2f(off_x, off_y);
+            pos_off_x += off_x;
+            pos_off_y += off_y;
         }
 
-        sf::Vector2f new_pos = turtle.getPosition() + pos_off;
+        sf::Vector2f new_pos = turtle.getPosition() + sf::Vector2f{pos_off_x, pos_off_y};
         turtle.setPosition(new_pos);
+
+        // generate new dingus
+        if (get_random_int(0, 500) == 0) {
+            sf::Vector2f loc{get_random_int(0, window.getSize().x), get_random_int(0, window.getSize().y)};
+            powerup_locations.push_back(loc);
+        }
 
         window.clear();
 
         window.draw(sprite);
-        double scale = calc_scale(window, sprite.getTexture(), 16);
-        sprite.setScale(scale, scale);
-        sprite.setPosition(window.getSize().x / 2 - sprite.getTexture()->getSize().x * scale / 2, window.getSize().y / 2 - sprite.getTexture()->getSize().y * scale / 2);
+        sprite.setPosition(window.getSize().x / 2 - sprite.getTexture()->getSize().x / 2, window.getSize().y / 2 - sprite.getTexture()->getSize().y / 2);
 
-        turtle.setScale(turtle_scale, turtle_scale);
+        sf::Rect turtle_rect((sf::Vector2i) turtle.getPosition(), (sf::Vector2i) turtle.getTexture()->getSize());
+        int i = 0;
+        for (auto loc : powerup_locations) {
+            powerup.setPosition(loc);
+            window.draw(powerup);
+            sf::Rect powerup_rect{(int) loc.x, (int) loc.y, (int) powerup.getTexture()->getSize().x, (int) powerup.getTexture()->getSize().y};
+            if (powerup_rect.intersects(turtle_rect)) {
+                powerup_locations.erase(powerup_locations.begin() + i);
+                speed_boost += 1.0;
+            }
+            i++;
+        }
+
         window.draw(turtle);
         turtle.tick();
 

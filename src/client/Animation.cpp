@@ -8,7 +8,6 @@ Animation::Animation(std::vector<std::string> textures, std::vector<int> cooldow
     repeating{false},
     start_time{std::chrono::system_clock::now()} {
         this->setTexture(texture_manager.get_texture(this->textures[0]));
-        this->setScale(4.0, 4.0);
     }
 
 void Animation::play() {
