@@ -3,12 +3,15 @@
 #include <string>
 #include <mutex>
 #include <functional>
+#include <atomic>
 
 namespace common {
     using input_handler_t = std::function<void (std::string)>;
 
     class Console {
         private:
+            std::atomic<bool> input_running;
+
             input_handler_t input_handler;
             bool is_running;
 

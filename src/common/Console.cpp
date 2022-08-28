@@ -16,7 +16,7 @@ const std::string LOG_LEVEL_TO_STRING[] = {
     "WARN "
 };
 
-common::Console::Console(input_handler_t input_handler) : input_handler(input_handler), is_running(true) {
+common::Console::Console(input_handler_t input_handler) : input_handler(input_handler), is_running(true), input_running(false) {
     rl_bind_key('\t', rl_tab_insert);
 
     std::thread input_acceptor_thread(&Console::input_acceptor, this);
@@ -39,12 +39,17 @@ void common::Console::bind_input_handler(input_handler_t input_handler) {
 
 common::Console::~Console() {
     this->is_running = false;
+    this->log(Console::INFO, "Press any key to close the console!");
+
+    while(this->input_running); //wait for input handler to finish
 }
 
 
 
 //private
 void common::Console::input_acceptor() {
+    this->input_running = true;
+
     char* buffer = nullptr;
     while(this->is_running) {
         buffer = readline(">> ");
@@ -63,4 +68,6 @@ void common::Console::input_acceptor() {
     if(buffer) {
         free(buffer);
     }
+
+    this->input_running = false;
 }
