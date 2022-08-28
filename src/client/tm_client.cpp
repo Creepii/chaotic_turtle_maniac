@@ -36,7 +36,14 @@ int main() {
         (float)window.getSize().y / background.getTexture()->getSize().y
     );
 
-    const std::vector<std::string> tex = {"turtle", "turtle_opening", "turtle_open", "turtle_shooting", "turtle_open", "turtle_opening"};
+    const std::vector<std::string> tex = {
+        "turtle",
+        "turtle_hatch_opening",
+        "turtle_hatch_open",
+        "turtle_hatch_shooting",
+        "turtle_hatch_open",
+        "turtle_hatch_opening"
+    };
     std::vector<int> time = {1000, 300, 300, 100, 300, 300};
     client::Animation turtle{tex, time, texture_manager};
     turtle.set_repeating(true);
@@ -102,7 +109,7 @@ int main() {
 
         // generate new dingus
         if (get_random_int(0, 500) == 0) {
-            sf::Vector2f loc{get_random_int(0, window.getSize().x), get_random_int(0, window.getSize().y)};
+            sf::Vector2f loc{(float)get_random_int(0, window.getSize().x), (float)get_random_int(0, window.getSize().y)};
             powerup_locations.push_back(loc);
         }
 
