@@ -1,7 +1,5 @@
 #include "Animation.h"
 
-using namespace client;
-
 client::Animation::Animation(const std::vector<std::string>& textures, const std::vector<int>& cooldowns) :
     current{0},
     textures{textures},
