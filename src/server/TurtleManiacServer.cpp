@@ -7,9 +7,10 @@
 
 using namespace server;
 using namespace server::network;
+using namespace std::chrono_literals;
 
-server::network::TurtleManiacServer::TurtleManiacServer(const unsigned short port, const common::Console& console)
- : port(port), console(console), is_running(false), running_threads(0) { 
+server::network::TurtleManiacServer::TurtleManiacServer(const unsigned short port, const common::Console& console, const size_t ticks_per_second)
+ : port(port), console(console), is_running(false), running_threads(0), update_delta(1000ms / ticks_per_second) { 
 }
 
 void server::network::TurtleManiacServer::start() {
@@ -71,7 +72,11 @@ void server::network::TurtleManiacServer::packet_handler() {
     this->running_threads++;
     this->console.log(common::Console::INFO, "Packet handler started.");
 
+    std::chrono::system_clock::time_point last_update;
+
     while(this->is_running) {
+        last_update = std::chrono::system_clock::now();
+      
         std::queue<std::pair<sf::Packet, sf::IpAddress>> to_process;
 
         {
@@ -86,6 +91,8 @@ void server::network::TurtleManiacServer::packet_handler() {
             this->handle_packet(to_process.front().first, to_process.front().second);
             to_process.pop();
         }
+
+        this->wait_for_next_tick(last_update);
     }
 
     this->console.log(common::Console::INFO, "Packet handler stopped.");
@@ -96,7 +103,11 @@ void server::network::TurtleManiacServer::connection_acceptor() {
     this->running_threads++;
     this->console.log(common::Console::INFO, "Connection acceptor started.");
 
+    std::chrono::system_clock::time_point last_update;
+
     while(this->is_running) {
+        last_update = std::chrono::system_clock::now();
+
         std::unique_ptr<sf::TcpSocket> client = std::make_unique<sf::TcpSocket>();
         
         switch(this->socket.accept(*client.get())) {
@@ -114,6 +125,8 @@ void server::network::TurtleManiacServer::connection_acceptor() {
                 this->console.log(common::Console::ERROR, "Client connection attempt failed!");
                 continue;
         }
+
+        this->wait_for_next_tick(last_update);
     }
 
     this->console.log(common::Console::INFO, "Connection acceptor stopped.");
@@ -124,7 +137,11 @@ void server::network::TurtleManiacServer::connection_listener() {
     this->running_threads++;
     this->console.log(common::Console::INFO, "Connection listener started.");
 
+    std::chrono::system_clock::time_point last_update;
+
     while(this->is_running) {
+        last_update = std::chrono::system_clock::now();
+
         std::vector<size_t> disconnected_clients;
         
         {
@@ -152,10 +169,16 @@ void server::network::TurtleManiacServer::connection_listener() {
         }
 
         if(!disconnected_clients.empty()) this->cleanup_connections(disconnected_clients);
+
+        this->wait_for_next_tick(last_update);
     }
 
     this->console.log(common::Console::INFO, "Connection listener stopped.");
     this->running_threads--;
+}
+
+void server::network::TurtleManiacServer::wait_for_next_tick(const std::chrono::system_clock::time_point last_update) {
+    std::this_thread::sleep_until(last_update + this->update_delta);
 }
 
 void server::network::TurtleManiacServer::cleanup_connections(const std::vector<size_t>& to_remove) {

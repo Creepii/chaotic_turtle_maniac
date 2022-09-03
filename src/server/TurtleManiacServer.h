@@ -15,6 +15,7 @@ namespace server {
         class TurtleManiacServer {
             private:
                 const unsigned short port;
+                const std::chrono::milliseconds update_delta;
 
                 std::atomic<bool> is_running;
                 std::atomic<size_t> running_threads;
@@ -35,9 +36,11 @@ namespace server {
                 void connection_acceptor();
                 void connection_listener();
 
+                void wait_for_next_tick(const std::chrono::system_clock::time_point last_update);
+
                 void cleanup_connections(const std::vector<size_t>& to_remove);
             public:
-                TurtleManiacServer(const unsigned short port, const common::Console& console);
+                TurtleManiacServer(const unsigned short port, const common::Console& console, const size_t ticks_per_second = 100);
                 void start();
                 void shutdown();
                 bool running();
