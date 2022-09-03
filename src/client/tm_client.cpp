@@ -1,10 +1,9 @@
 #include <SFML/Graphics.hpp>
 #include <random>
 
-#include "network/ClientSocket.h"
-
+#include "GameState.h"
 #include "TextureManager.h"
-#include "Animation.h"
+#include "objects/Turtle.h"
 
 // inclusive min and max
 int get_random_int(int min, int max) {
@@ -15,11 +14,9 @@ int get_random_int(int min, int max) {
 }
 
 int main() {
-    client::network::ClientSocket socket("127.0.0.1", 50141);
-
-    socket.connect();
-
     client::TextureManager::get_instance().load_directory(RESOURCE_FOLDER);
+
+    client::GameState game_state;
 
     sf::RenderWindow window(sf::VideoMode(500, 500), "Chaotic Turtle Maniac", sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(60);
@@ -28,6 +25,7 @@ int main() {
         client::TextureManager::get_instance().get_texture("logo").getSize().y,
         client::TextureManager::get_instance().get_texture("logo").copyToImage().getPixelsPtr()
     );
+
     sf::Sprite sprite;
     sprite.setTexture(client::TextureManager::get_instance().get_texture("holy_salad"));
 
@@ -38,17 +36,7 @@ int main() {
         (float)window.getSize().y / background.getTexture()->getSize().y
     );
 
-    const std::vector<std::string> tex = {
-        "turtle",
-        "turtle_hatch_opening",
-        "turtle_hatch_open",
-        "turtle_hatch_shooting",
-        "turtle_hatch_open",
-        "turtle_hatch_opening"
-    };
-    std::vector<int> time = {1000, 300, 300, 100, 300, 300};
-    client::Animation turtle{tex, time};
-    turtle.set_repeating(true);
+    client::Turtle turtle;
 
     std::vector<sf::Vector2f> powerup_locations;
     sf::Sprite powerup;
@@ -65,49 +53,6 @@ int main() {
                 window.setView(sf::View(visibleArea));
             }
         }
-
-        float move_dist = 2.0 * speed_boost;
-        float pos_off_x = 0.0;
-        float pos_off_y = 0.0;
-
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
-            pos_off_y -= move_dist;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
-            pos_off_y += move_dist;
-        }
-        if (!(turtle.getPosition().y + pos_off_y >= 0 && turtle.getPosition().y + pos_off_y + turtle.getTexture()->getSize().y <= window.getSize().y)) {
-            pos_off_y = 0.0; // cancel if y movement is out of window
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
-            pos_off_x -= move_dist;
-        }
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
-            pos_off_x += move_dist;
-        }
-        if (!(turtle.getPosition().x + pos_off_x >= 0 && turtle.getPosition().x + pos_off_x + turtle.getTexture()->getSize().x <= window.getSize().x)) {
-            pos_off_x = 0.0; // cancel if x movement is out of window
-        }
-
-        if(pos_off_x != 0.0 || pos_off_y != 0) {
-            sf::Packet position_change_packet;
-            position_change_packet << pos_off_x << pos_off_y;
-            socket.send_packet(position_change_packet);
-        }
-
-        std::queue<sf::Packet> received = socket.get_available_packets();
-
-        while(!received.empty()) {
-            float off_x, off_y;
-            received.front() >> off_x >> off_y;
-            received.pop();
-
-            pos_off_x += off_x;
-            pos_off_y += off_y;
-        }
-
-        sf::Vector2f new_pos = turtle.getPosition() + sf::Vector2f{pos_off_x, pos_off_y};
-        turtle.setPosition(new_pos);
 
         // generate new dingus
         if (get_random_int(0, 500) == 0) {
@@ -135,12 +80,12 @@ int main() {
         }
 
         window.draw(turtle);
-        turtle.tick();
+        turtle.tick(game_state);
 
         window.display();
     }
 
-    socket.disconnect();
+    game_state.get_socket().disconnect();
 
     return 0;
 }

@@ -3,6 +3,9 @@ find_package(SFML COMPONENTS window graphics system REQUIRED)
 set(CLIENT_SOURCE_FILES
     TextureManager.cpp
     Animation.cpp
+    objects/Turtle.cpp
+    objects/Tickable.cpp
+    GameState.cpp
     
     network/ClientSocket.cpp
 )
