@@ -28,7 +28,6 @@ namespace server {
                 std::mutex client_connections_mutex;
                 std::vector<std::unique_ptr<sf::TcpSocket>> client_connections;
 
-                const common::Console& console;
 
                 void handle_packet(sf::Packet& to_process, const sf::IpAddress& sender);
 
@@ -40,7 +39,7 @@ namespace server {
 
                 void cleanup_connections(const std::vector<size_t>& to_remove);
             public:
-                TurtleManiacServer(const unsigned short port, const common::Console& console, const size_t ticks_per_second = 100);
+                TurtleManiacServer(const unsigned short port, const size_t ticks_per_second = 100);
                 void start();
                 void shutdown();
                 bool running();

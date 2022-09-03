@@ -27,12 +27,10 @@ namespace client {
                 std::mutex received_mutex;
                 std::queue<sf::Packet> received;
 
-                const common::Console& console;
-
                 void packet_receiver();
                 void packet_sender();
             public:
-                ClientSocket(const sf::IpAddress& address, const unsigned short port, const common::Console& console);
+                ClientSocket(const sf::IpAddress& address, const unsigned short port);
                 ~ClientSocket();
                 void connect();
                 void send_packet(const sf::Packet& to_send);

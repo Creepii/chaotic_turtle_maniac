@@ -4,15 +4,14 @@
 
 #include "TurtleManiacServer.h"
 
-void handle_input(server::network::TurtleManiacServer& server, const common::Console& console, std::string input);
+void handle_input(server::network::TurtleManiacServer& server, std::string input);
 
 int main() {
     using namespace std::chrono_literals;
 
-    common::Console console{};
-    server::network::TurtleManiacServer turtle_server(50141, console);
+    server::network::TurtleManiacServer turtle_server(50141);
 
-    console.bind_input_handler(std::bind(handle_input, std::ref(turtle_server), std::ref(console), std::placeholders::_1));
+    common::Console::get_instance().bind_input_handler(std::bind(handle_input, std::ref(turtle_server), std::placeholders::_1));
     turtle_server.start();
 
     while(turtle_server.running()) {
@@ -22,10 +21,10 @@ int main() {
     return 0;
 }
 
-void handle_input(server::network::TurtleManiacServer& server, const common::Console& console, std::string input) {
+void handle_input(server::network::TurtleManiacServer& server, std::string input) {
     if(input == "stop") {
         server.shutdown();
     } else {
-        console.log(common::Console::ERROR, "Unknown command!");
+        common::Console::get_instance().log(common::Console::ERROR, "Unknown command!");
     }
 }

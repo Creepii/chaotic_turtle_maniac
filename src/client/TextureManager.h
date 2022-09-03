@@ -9,16 +9,20 @@
 namespace client {
     class TextureManager {
         private:
-            const common::Console& console;
+            static TextureManager singleton;
+
             std::map<std::string, sf::Texture> texture_map;
 
             bool has_texture(const std::string& name) const;
 
             static const sf::Texture& get_missing_texture();
+
+            TextureManager();
         public:
-            TextureManager(const common::Console& console);
             void load_texture(const std::string& name, const std::string& filename);
             void load_directory(const std::string& directory);
+
+            static TextureManager& get_instance();
             const sf::Texture& get_texture(const std::string& name) const;
     };
 }

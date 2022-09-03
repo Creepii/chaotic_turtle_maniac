@@ -10,6 +10,8 @@ namespace common {
 
     class Console {
         private:
+            static Console singleton;
+
             std::atomic<bool> input_running;
 
             input_handler_t input_handler;
@@ -18,6 +20,8 @@ namespace common {
             mutable std::mutex print_mutex;
 
             void input_acceptor();
+
+            Console();
         public:
             enum LogLevel {
                 DEBUG,
@@ -26,9 +30,9 @@ namespace common {
                 WARNING
             };
 
-            Console(input_handler_t input_handler = {});
             void log(const LogLevel level, const std::string& message) const;
             void bind_input_handler(input_handler_t input_handler);
+            static Console& get_instance();
             ~Console();
     };
 }

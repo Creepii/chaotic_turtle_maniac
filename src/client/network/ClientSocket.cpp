@@ -6,8 +6,8 @@
 using namespace client;
 using namespace client::network;
 
-client::network::ClientSocket::ClientSocket(const sf::IpAddress& address, const unsigned short port, const common::Console& console)
- : address(address), port(port), console(console), is_running(false), running_threads(0) {
+client::network::ClientSocket::ClientSocket(const sf::IpAddress& address, const unsigned short port)
+ : address(address), port(port), is_running(false), running_threads(0) {
 }
 
 client::network::ClientSocket::~ClientSocket() {
@@ -25,12 +25,12 @@ void client::network::ClientSocket::connect() {
 
     this->socket.setBlocking(true);
     if(this->socket.connect(this->address, this->port) != sf::Socket::Done) {
-        this->console.log(common::Console::ERROR, "Unable to connect to " + this->address.toString() + ":" + std::to_string(this->port) + "!");
+        common::Console::get_instance().log(common::Console::ERROR, "Unable to connect to " + this->address.toString() + ":" + std::to_string(this->port) + "!");
         return;
     }
     this->socket.setBlocking(false);
 
-    this->console.log(common::Console::INFO, "Connected to " + this->address.toString() + ":" + std::to_string(this->port) + ".");
+    common::Console::get_instance().log(common::Console::INFO, "Connected to " + this->address.toString() + ":" + std::to_string(this->port) + ".");
 
     std::thread packet_receiver_thread(&ClientSocket::packet_receiver, this);
     std::thread packet_sender_thread(&ClientSocket::packet_sender, this);
@@ -60,7 +60,7 @@ void client::network::ClientSocket::disconnect() {
         return;
     }
 
-    this->console.log(common::Console::INFO, "Disconnected from server!");
+    common::Console::get_instance().log(common::Console::INFO, "Disconnected from server!");
     this->socket.disconnect();
 
     while(this->running_threads > 0); //wait for threads to shutdown

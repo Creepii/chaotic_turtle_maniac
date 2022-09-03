@@ -4,33 +4,30 @@
 
 using namespace client;
 
-client::TextureManager::TextureManager(const common::Console& console) : console(console) {
+client::TextureManager client::TextureManager::singleton = client::TextureManager{};
+
+// private
+
+client::TextureManager::TextureManager() {
 }
 
-// void client::TextureManager::load_textures() {
-//     this->load_texture("holy_salad", RESOURCE_FOLDER"/holy_salad.png");
-//     this->load_texture("powerup", RESOURCE_FOLDER"/powerup.png");
-//     this->load_texture("turtle", RESOURCE_FOLDER"/turtle.png");
-//     this->load_texture("turtle_opening", RESOURCE_FOLDER"/turtle_hatch_opening.png");
-//     this->load_texture("turtle_open", RESOURCE_FOLDER"/turtle_hatch_open.png");
-//     this->load_texture("turtle_shooting", RESOURCE_FOLDER"/turtle_hatch_shooting.png");
-//     this->load_texture("logo", RESOURCE_FOLDER"/logo.png");
-//     this->load_texture("background", RESOURCE_FOLDER"/background.png");
-// }
-
+// static
+client::TextureManager& client::TextureManager::get_instance() {
+    return client::TextureManager::singleton;
+}
 
 
 // public
 
 void client::TextureManager::load_texture(const std::string& name, const std::string& filename) {
     if(this->has_texture(name)) {
-        this->console.log(common::Console::ERROR, "Tried to load texture with name '" + name + "', but it already exists!");
+        common::Console::get_instance().log(common::Console::ERROR, "Tried to load texture with name '" + name + "', but it already exists!");
         return;
     }
 
     sf::Texture loaded;
     if (!loaded.loadFromFile(filename)) {
-        this->console.log(common::Console::ERROR, "Can't load texture" + filename + "!");  
+        common::Console::get_instance().log(common::Console::ERROR, "Can't load texture" + filename + "!");  
         return; 
     }
 
@@ -42,7 +39,7 @@ void client::TextureManager::load_directory(const std::string& directory) {
         if(!entry.is_directory()) {
             if(entry.path().extension() == ".png") {
                 this->load_texture(entry.path().stem().string(), entry.path().string());
-                this->console.log(common::Console::INFO, "Loaded texture " + entry.path().string() + " as " + entry.path().stem().string());
+                common::Console::get_instance().log(common::Console::INFO, "Loaded texture " + entry.path().string() + " as " + entry.path().stem().string());
             }
         }
     }

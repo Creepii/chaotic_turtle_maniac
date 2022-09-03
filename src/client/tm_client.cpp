@@ -15,22 +15,24 @@ int get_random_int(int min, int max) {
 }
 
 int main() {
-    common::Console console{};
-    client::network::ClientSocket socket("127.0.0.1", 50141, console);
+    client::network::ClientSocket socket("127.0.0.1", 50141);
 
     socket.connect();
 
-    client::TextureManager texture_manager(console);
-    texture_manager.load_directory(RESOURCE_FOLDER);
+    client::TextureManager::get_instance().load_directory(RESOURCE_FOLDER);
 
     sf::RenderWindow window(sf::VideoMode(500, 500), "Chaotic Turtle Maniac", sf::Style::Titlebar | sf::Style::Close);
     window.setFramerateLimit(60);
-    window.setIcon(texture_manager.get_texture("logo").getSize().x, texture_manager.get_texture("logo").getSize().y, texture_manager.get_texture("logo").copyToImage().getPixelsPtr());
+    window.setIcon(
+        client::TextureManager::get_instance().get_texture("logo").getSize().x,
+        client::TextureManager::get_instance().get_texture("logo").getSize().y,
+        client::TextureManager::get_instance().get_texture("logo").copyToImage().getPixelsPtr()
+    );
     sf::Sprite sprite;
-    sprite.setTexture(texture_manager.get_texture("holy_salad"));
+    sprite.setTexture(client::TextureManager::get_instance().get_texture("holy_salad"));
 
     sf::Sprite background;
-    background.setTexture(texture_manager.get_texture("background"));
+    background.setTexture(client::TextureManager::get_instance().get_texture("background"));
     background.setScale(
         (float)window.getSize().x / background.getTexture()->getSize().x,
         (float)window.getSize().y / background.getTexture()->getSize().y
@@ -45,12 +47,12 @@ int main() {
         "turtle_hatch_opening"
     };
     std::vector<int> time = {1000, 300, 300, 100, 300, 300};
-    client::Animation turtle{tex, time, texture_manager};
+    client::Animation turtle{tex, time};
     turtle.set_repeating(true);
 
     std::vector<sf::Vector2f> powerup_locations;
     sf::Sprite powerup;
-    powerup.setTexture(texture_manager.get_texture("powerup"));
+    powerup.setTexture(client::TextureManager::get_instance().get_texture("powerup"));
     double speed_boost = 1.0;
 
     while (window.isOpen()) {

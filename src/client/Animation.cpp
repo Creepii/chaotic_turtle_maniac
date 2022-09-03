@@ -2,15 +2,14 @@
 
 using namespace client;
 
-client::Animation::Animation(const std::vector<std::string>& textures, const std::vector<int>& cooldowns, const client::TextureManager& texture_manager) :
+client::Animation::Animation(const std::vector<std::string>& textures, const std::vector<int>& cooldowns) :
     current{0},
     textures{textures},
     cooldowns{cooldowns},
     playing{false},
     repeating{false},
-    start_time{std::chrono::system_clock::now()},
-    texture_manager(texture_manager) {
-        this->setTexture(this->texture_manager.get_texture(this->textures[0]));
+    start_time{std::chrono::system_clock::now()} {
+        this->setTexture(client::TextureManager::get_instance().get_texture(this->textures[0]));
     }
 
 void client::Animation::play() {
@@ -31,7 +30,7 @@ void client::Animation::tick() {
             } else {
                 this->start_time = std::chrono::system_clock::now();
             }
-            this->setTexture(this->texture_manager.get_texture(this->textures[this->current]));
+            this->setTexture(client::TextureManager::get_instance().get_texture(this->textures[this->current]));
         }
     } else if (this->repeating) {
         this->play();

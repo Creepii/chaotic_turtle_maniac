@@ -13,14 +13,13 @@ namespace client {
             const std::vector<std::string> textures;
             const std::vector<int> cooldowns;
 
-            const client::TextureManager& texture_manager;
 
             int current;
             std::chrono::time_point<std::chrono::system_clock> start_time;
             bool playing;
             bool repeating;
         public:
-            Animation(const std::vector<std::string>& textures, const std::vector<int>& cooldowns, const client::TextureManager& texture_manager);
+            Animation(const std::vector<std::string>& textures, const std::vector<int>& cooldowns);
             void play();
             void tick();
             void set_repeating(bool value);

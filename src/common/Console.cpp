@@ -9,6 +9,8 @@
 
 using namespace common;
 
+common::Console common::Console::singleton = common::Console{};
+
 const std::string LOG_LEVEL_TO_STRING[] = {
     "DEBUG",
     "INFO ",
@@ -16,12 +18,15 @@ const std::string LOG_LEVEL_TO_STRING[] = {
     "WARN "
 };
 
-common::Console::Console(input_handler_t input_handler) : input_handler(input_handler), is_running(true), input_running(false) {
+// private
+common::Console::Console() : input_handler(nullptr), is_running(true), input_running(false) {
     rl_bind_key('\t', rl_tab_insert);
 
     std::thread input_acceptor_thread(&Console::input_acceptor, this);
     input_acceptor_thread.detach();
 }
+
+// public
 
 void common::Console::log(const LogLevel level, const std::string& message) const {
     std::lock_guard<std::mutex> print_lock(this->print_mutex);
@@ -42,6 +47,13 @@ common::Console::~Console() {
     this->log(Console::INFO, "Press any key to close the console!");
 
     while(this->input_running); //wait for input handler to finish
+}
+
+
+
+// static
+common::Console& common::Console::get_instance() {
+    return common::Console::singleton;
 }
 
 
