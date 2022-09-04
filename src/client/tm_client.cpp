@@ -5,15 +5,8 @@
 #include "TextureManager.h"
 #include "objects/Turtle.h"
 
-// inclusive min and max
-int get_random_int(int min, int max) {
-    std::random_device r;
-    std::default_random_engine e1(r());
-    std::uniform_int_distribution<int> uniform_dist(min, max);
-    return uniform_dist(e1);
-}
-
 int main() {
+    std::uniform_real_distribution percentage_distrib(0.0, 1.0);
     client::TextureManager::get_instance().load_directory(RESOURCE_FOLDER);
 
     client::GameState game_state;
@@ -55,8 +48,10 @@ int main() {
         }
 
         // generate new dingus
-        if (get_random_int(0, 500) == 0) {
-            sf::Vector2f loc{(float)get_random_int(0, window.getSize().x), (float)get_random_int(0, window.getSize().y)};
+        if (percentage_distrib(game_state.get_rand()) < 0.025) {
+            std::uniform_int_distribution<unsigned int> width_distrib(0, window.getSize().x);
+            std::uniform_int_distribution<unsigned int> height_distrib(0, window.getSize().y);
+            sf::Vector2f loc{(float)width_distrib(game_state.get_rand()), (float)height_distrib(game_state.get_rand())};
             powerup_locations.push_back(loc);
         }
 
