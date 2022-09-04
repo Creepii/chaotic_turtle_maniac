@@ -22,3 +22,11 @@ int client::GameState::get_window_height() const {
 std::default_random_engine& client::GameState::get_rand() {
     return this->rand_engine;
 }
+
+void client::GameState::add_game_object(std::unique_ptr<client::GameObject> obj) {
+    this->game_objects.push_back(std::move(obj));
+}
+
+std::vector<std::unique_ptr<client::GameObject>>& client::GameState::get_game_objects() {
+    return this->game_objects;
+}

@@ -1,6 +1,8 @@
 #include <SFML/Graphics.hpp>
 #include <random>
 
+#include "common/Console.h"
+
 #include "GameState.h"
 #include "TextureManager.h"
 #include "objects/Turtle.h"
@@ -19,6 +21,7 @@ int main() {
         client::TextureManager::get_instance().get_texture("logo").copyToImage().getPixelsPtr()
     );
 
+    // TODO: make class static game object
     sf::Sprite sprite;
     sprite.setTexture(client::TextureManager::get_instance().get_texture("holy_salad"));
 
@@ -29,7 +32,7 @@ int main() {
         (float)window.getSize().y / background.getTexture()->getSize().y
     );
 
-    client::Turtle turtle;
+    game_state.add_game_object(std::move(std::make_unique<client::Turtle>()));
 
     std::vector<sf::Vector2f> powerup_locations;
     sf::Sprite powerup;
@@ -47,10 +50,26 @@ int main() {
             }
         }
 
-        // generate new dingus
+        std::queue<sf::Packet> received = game_state.get_socket().get_available_packets();
+
+        while(!received.empty()) {
+            float off_x, off_y;
+            received.front() >> off_x >> off_y;
+            received.pop();
+
+            // get the turtle and update position
+            for (std::unique_ptr<client::GameObject>& obj : game_state.get_game_objects()) {
+                try {
+                    client::Turtle& t = dynamic_cast<client::Turtle&>(*obj);
+                    t.setPosition(t.getPosition() + sf::Vector2f{off_x, off_y});
+                } catch (std::bad_cast e) {}
+            }
+        }
+
+        // generate new powerup
         if (percentage_distrib(game_state.get_rand()) < 0.025) {
-            std::uniform_int_distribution<unsigned int> width_distrib(0, window.getSize().x);
-            std::uniform_int_distribution<unsigned int> height_distrib(0, window.getSize().y);
+            std::uniform_int_distribution<unsigned int> width_distrib(0, game_state.get_window_width());
+            std::uniform_int_distribution<unsigned int> height_distrib(0, game_state.get_window_height());
             sf::Vector2f loc{(float)width_distrib(game_state.get_rand()), (float)height_distrib(game_state.get_rand())};
             powerup_locations.push_back(loc);
         }
@@ -61,21 +80,31 @@ int main() {
         window.draw(sprite);
         sprite.setPosition(window.getSize().x / 2 - sprite.getTexture()->getSize().x / 2, window.getSize().y / 2 - sprite.getTexture()->getSize().y / 2);
 
-        sf::Rect turtle_rect((sf::Vector2i) turtle.getPosition(), (sf::Vector2i) turtle.getTexture()->getSize());
-        int i = 0;
-        for (auto loc : powerup_locations) {
-            powerup.setPosition(loc);
-            window.draw(powerup);
-            sf::Rect powerup_rect{(int) loc.x, (int) loc.y, (int) powerup.getTexture()->getSize().x, (int) powerup.getTexture()->getSize().y};
-            if (powerup_rect.intersects(turtle_rect)) {
-                powerup_locations.erase(powerup_locations.begin() + i);
-                speed_boost += 1.0;
-            }
-            i++;
-        }
+        // sf::Rect turtle_rect((sf::Vector2i) turtle.getPosition(), (sf::Vector2i) turtle.getTexture()->getSize());
+        // int i = 0;
+        // for (auto loc : powerup_locations) {
+        //     powerup.setPosition(loc);
+        //     window.draw(powerup);
+        //     sf::Rect powerup_rect{(int) loc.x, (int) loc.y, (int) powerup.getTexture()->getSize().x, (int) powerup.getTexture()->getSize().y};
+        //     if (powerup_rect.intersects(turtle_rect)) {
+        //         powerup_locations.erase(powerup_locations.begin() + i);
+        //         speed_boost += 1.0;
+        //     }
+        //     i++;
+        // }
 
-        window.draw(turtle);
-        turtle.tick(game_state);
+        // iterate all game objects
+        // if tickable: tick (dynamic cast)
+        for (std::unique_ptr<client::GameObject>& obj : game_state.get_game_objects()) {
+            try {
+                client::Tickable& t = dynamic_cast<client::Tickable&>(*obj);
+                t.tick(game_state);
+            } catch (std::bad_cast e) {}
+            try {
+                sf::Sprite& s = dynamic_cast<sf::Sprite&>(*obj);
+                window.draw(s);
+            } catch (std::bad_cast e) {}
+        }
 
         window.display();
     }

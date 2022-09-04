@@ -9,7 +9,15 @@ client::Turtle::Turtle() :
 void client::Turtle::tick(client::GameState& game_state) {
     // TODO: collisions
 
-    float move_dist = 2.0 * this->speed_boost;
+    sf::Vector2f pos_off = this->get_turtle_move(game_state);
+
+    this->send_position_change(game_state, pos_off.x, pos_off.y);
+
+    this->setPosition(this->getPosition() + sf::Vector2f{pos_off.x, pos_off.y});
+}
+
+sf::Vector2f client::Turtle::get_turtle_move(client::GameState& game_state) {
+    float move_dist = 1.0 + this->speed_boost;
     float pos_off_x = 0.0;
     float pos_off_y = 0.0;
 
@@ -19,37 +27,35 @@ void client::Turtle::tick(client::GameState& game_state) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
         pos_off_y += move_dist;
     }
-    if (!(this->getPosition().y + pos_off_y >= 0 && this->getPosition().y + pos_off_y + this->getTexture()->getSize().y <= game_state.get_window_height())) {
-        pos_off_y = 0.0; // cancel if y movement is out of window
+    // turtle can only move to border not further
+    if (this->getPosition().y + pos_off_y < 0.0) {
+        pos_off_y = 0.0 - this->getPosition().y;
     }
+    if (this->getPosition().y + pos_off_y + this->getTexture()->getSize().y > game_state.get_window_height()) {
+        pos_off_y = game_state.get_window_height() - this->getPosition().y - this->getTexture()->getSize().y;
+    }
+
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
         pos_off_x -= move_dist;
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
         pos_off_x += move_dist;
     }
-    if (!(this->getPosition().x + pos_off_x >= 0 && this->getPosition().x + pos_off_x + this->getTexture()->getSize().x <= game_state.get_window_width())) {
-        pos_off_x = 0.0; // cancel if x movement is out of window
+    // turtle can only move to border not further
+    if (this->getPosition().x + pos_off_x < 0.0) {
+        pos_off_x = 0.0 - this->getPosition().x;
+    }
+    if (this->getPosition().x + pos_off_x + this->getTexture()->getSize().x > game_state.get_window_width()) {
+        pos_off_x = game_state.get_window_width() - this->getPosition().x - this->getTexture()->getSize().x;
     }
 
-    if(pos_off_x != 0.0 || pos_off_y != 0.0) {
+    return sf::Vector2f{pos_off_x, pos_off_y};
+}
+
+void client::Turtle::send_position_change(client::GameState& game_state, float off_x, float off_y) {
+    if(off_x != 0.0 || off_y != 0.0) {
         sf::Packet position_change_packet;
-        position_change_packet << pos_off_x << pos_off_y;
+        position_change_packet << off_x << off_y;
         game_state.get_socket().send_packet(position_change_packet);
-    }
-
-    // move to main()
-    std::queue<sf::Packet> received = game_state.get_socket().get_available_packets();
-
-    while(!received.empty()) {
-        float off_x, off_y;
-        received.front() >> off_x >> off_y;
-        received.pop();
-
-        pos_off_x += off_x;
-        pos_off_y += off_y;
-    }
-
-    sf::Vector2f new_pos = this->getPosition() + sf::Vector2f{pos_off_x, pos_off_y};
-    this->setPosition(new_pos);
+    }   
 }
